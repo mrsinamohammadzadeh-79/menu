@@ -1,0 +1,7 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#ede5d4"/>
+  <circle cx="400" cy="280" r="110" fill="none" stroke="#a3ae8e" stroke-opacity="0.7" stroke-width="2.5"/>
+  <path d="M368 264 q-16 18 0 36 q16 18 0 36" stroke="#6b7a58" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M432 264 q16 18 0 36 q-16 18 0 36" stroke="#6b7a58" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <text x="400" y="448" text-anchor="middle" font-family="Georgia, serif" font-size="20" letter-spacing="8" fill="#6b7a58">VELOURIA</text>
+</svg>
