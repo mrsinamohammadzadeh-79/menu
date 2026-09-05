@@ -71,24 +71,19 @@ drawer: $("#drawer"),
     MENU.categories.forEach(function (cat, i) {
       const card = el(
         "button",
-        "cat-card",
+        "cat-card stagger",
         "" +
           '<span class="cat-card-media">' +
           '<img src="' + esc(cat.image) + '" alt="' + esc(cat.title) + '" loading="eager">' +
+          '<span class="cat-card-mark">' + cat.icon + "</span>" +
           "</span>" +
           '<span class="cat-card-body">' +
-          '<span class="cat-card-top">' +
-          '<span class="cat-card-icon">' + cat.icon + "</span>" +
-          (cat.products.length
-            ? '<span class="cat-count">' + formatPriceOnly(cat.products.length) + " گزینه</span>"
-            : "") +
-          "</span>" +
           '<span class="cat-card-name">' + esc(cat.title) + "</span>" +
           '<span class="cat-card-en">' + esc(cat.englishTitle) + "</span>" +
           (cat.tagline ? '<span class="cat-card-tagline">' + esc(cat.tagline) + "</span>" : "") +
           "</span>" +
           '<span class="cat-card-arrow"><span>' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M9 4l8 8-8 8"/></svg>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M15 4l-8 8 8 8"/></svg>' +
           "</span></span>"
       );
       card.style.animationDelay = i * 70 + "ms";
@@ -666,20 +661,57 @@ drawer: $("#drawer"),
     }, 800);
   }
 
-  function init() {
-    renderSocialPanel();
-    renderFooter();
+  /* ============================================================
+     پیش‌بارگذاری همه تصاویر به ترتیب (بعد از لود صفحه)
+     تا تصاویر محصولات قبل از ورود به دسته آماده باشند
+     ============================================================ */
+  function preloadImages() {
+    const srcs = [];
+    MENU.categories.forEach(function (cat) {
+      if (cat.image) srcs.push(cat.image);
+      (cat.products || []).forEach(function (p) {
+        if (p.image) srcs.push(p.image);
+      });
+    });
 
-    // پرده لودینگ — ۴ ثانیه نمایش، بعد محو شدن
+    const seen = {};
+    const list = srcs.filter(function (s) {
+      if (seen[s]) return false;
+      seen[s] = true;
+      return true;
+    });
+
+    function loadNext(i) {
+      if (i >= list.length) return;
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = img.onerror = function () {
+        loadNext(i + 1);
+      };
+      img.src = list[i];
+    }
+    loadNext(0);
+  }
+
+  function init() {
+    // پرده لودینگ — همیشه محو شود تا اسکرول قفل نماند
     const reduce =
       window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || document.readyState === "complete") {
+    const done = function () {
       setTimeout(hideLoader, reduce ? 300 : 5000);
+    };
+    if (reduce || document.readyState === "complete") {
+      done();
     } else {
       window.addEventListener("load", function () {
-        setTimeout(hideLoader, 5000);
+        if (document.readyState === "complete") done();
       });
+      // بازگشتی امن: اگر رویداد load هرگز نیامد، باز اسکرول باز شود
+      setTimeout(done, 4000);
     }
+
+    renderSocialPanel();
+    renderFooter();
 
     // خواندن دسته از آدرس (اختیاری): ?category=cakes
     const param = new URLSearchParams(location.search).get("category");
@@ -694,6 +726,16 @@ drawer: $("#drawer"),
     }
 
     bindEvents();
+
+    // پیش‌بارگذاری تصاویر پس از لود کامل صفحه
+    const runPreload = function () {
+      setTimeout(preloadImages, 250);
+    };
+    if (document.readyState === "complete") {
+      runPreload();
+    } else {
+      window.addEventListener("load", runPreload);
+    }
   }
 
   init();
